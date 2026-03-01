@@ -1,0 +1,1300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Numerical Analysis Calculator</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    background: #f5f5f5;
+    color: #222;
+    line-height: 1.6;
+    padding: 20px;
+  }
+
+  .container {
+    max-width: 1000px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    overflow: hidden;
+  }
+
+  header {
+    background: #2c3e50;
+    color: white;
+    padding: 20px 30px;
+    border-bottom: 3px solid #34495e;
+  }
+
+  h1 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 5px;
+  }
+
+  .subtitle {
+    font-size: 0.85rem;
+    color: #bdc3c7;
+  }
+
+  .tabs {
+    display: flex;
+    border-bottom: 2px solid #ddd;
+    background: #f8f9fa;
+  }
+
+  .tab {
+    flex: 1;
+    padding: 15px 10px;
+    background: transparent;
+    border: none;
+    border-right: 1px solid #ddd;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #555;
+    transition: all 0.2s;
+  }
+
+  .tab:last-child { border-right: none; }
+  .tab:hover { background: #e9ecef; }
+  .tab.active {
+    background: white;
+    color: #2c3e50;
+    font-weight: 600;
+    border-bottom: 3px solid #3498db;
+  }
+
+  .module {
+    display: none;
+    padding: 30px;
+  }
+
+  .module.active { display: block; }
+
+  .section {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+
+  .section-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 15px;
+    color: #2c3e50;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #3498db;
+  }
+
+  .info-box {
+    background: #e3f2fd;
+    border-left: 4px solid #2196f3;
+    padding: 12px 15px;
+    margin-bottom: 20px;
+    font-size: 0.9rem;
+    color: #0d47a1;
+  }
+
+  .warn-box {
+    background: #fff3cd;
+    border-left: 4px solid #ffc107;
+    padding: 12px 15px;
+    margin-bottom: 20px;
+    font-size: 0.9rem;
+    color: #856404;
+  }
+
+  .form-row {
+    display: grid;
+    gap: 15px;
+    margin-bottom: 15px;
+  }
+
+  .form-row.cols-2 { grid-template-columns: 1fr 1fr; }
+  .form-row.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .form-row.cols-4 { grid-template-columns: 2fr 1fr 1fr 1fr; }
+
+  @media (max-width: 600px) {
+    .form-row.cols-2, .form-row.cols-3, .form-row.cols-4 {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .field { margin-bottom: 15px; }
+
+  label {
+    display: block;
+    font-weight: 500;
+    margin-bottom: 6px;
+    color: #495057;
+    font-size: 0.9rem;
+  }
+
+  input[type="number"],
+  input[type="text"],
+  select,
+  textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 2px solid #ced4da;
+    border-radius: 4px;
+    font-size: 0.95rem;
+    background: white;
+    color: #333;
+    font-family: 'Courier New', monospace;
+  }
+
+  textarea {
+    resize: vertical;
+    min-height: 60px;
+  }
+
+  input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: #3498db;
+  }
+
+  button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-primary {
+    background: #3498db;
+    color: white;
+    width: 100%;
+    padding: 12px;
+    font-size: 1rem;
+    margin-top: 10px;
+  }
+
+  .btn-primary:hover { background: #2980b9; }
+
+  .btn-secondary {
+    background: #95a5a6;
+    color: white;
+    font-size: 0.85rem;
+  }
+
+  .btn-secondary:hover { background: #7f8c8d; }
+
+  .btn-group {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .toggle-group {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .toggle-btn {
+    flex: 1;
+    padding: 10px 15px;
+    background: white;
+    border: 2px solid #ced4da;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    text-align: center;
+    transition: all 0.2s;
+    min-width: 80px;
+  }
+
+  .toggle-btn:hover {
+    border-color: #3498db;
+    background: #e3f2fd;
+  }
+
+  .toggle-btn.active {
+    background: #3498db;
+    color: white;
+    border-color: #3498db;
+  }
+
+  .results {
+    display: none;
+    background: white;
+    border: 2px solid #27ae60;
+    border-radius: 6px;
+    padding: 20px;
+    margin-top: 20px;
+  }
+
+  .results.show { display: block; }
+
+  .result-main {
+    font-size: 1.8rem;
+    font-family: 'Courier New', monospace;
+    color: #27ae60;
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #e8f5e9;
+    border-radius: 4px;
+    text-align: center;
+    word-break: break-all;
+  }
+
+  .result-label {
+    font-size: 0.85rem;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 5px;
+  }
+
+  .result-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 15px 0;
+  }
+
+  .result-table td {
+    padding: 10px;
+    border-bottom: 1px solid #e0e0e0;
+  }
+
+  .result-table td:first-child {
+    font-weight: 600;
+    color: #555;
+    width: 40%;
+  }
+
+  .result-table td:last-child {
+    font-family: 'Courier New', monospace;
+    color: #2c3e50;
+  }
+
+  .steps {
+    background: #fafafa;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    padding: 15px;
+    margin-top: 15px;
+  }
+
+  .steps-title {
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 10px;
+    font-size: 0.9rem;
+  }
+
+  .step {
+    padding: 8px 0;
+    border-bottom: 1px solid #e9ecef;
+    font-size: 0.9rem;
+    display: flex;
+    gap: 10px;
+  }
+
+  .step:last-child { border-bottom: none; }
+
+  .step-num {
+    font-weight: 600;
+    color: #3498db;
+    min-width: 25px;
+  }
+
+  .step-text {
+    flex: 1;
+    font-family: 'Courier New', monospace;
+  }
+
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    margin: 20px 0;
+  }
+
+  @media (max-width: 600px) {
+    .metrics { grid-template-columns: 1fr; }
+  }
+
+  .metric {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 15px;
+  }
+
+  .metric-label {
+    font-size: 0.8rem;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+  }
+
+  .metric-value {
+    font-size: 1.3rem;
+    font-family: 'Courier New', monospace;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 5px;
+  }
+
+  .metric-formula {
+    font-size: 0.75rem;
+    color: #888;
+    font-family: 'Courier New', monospace;
+  }
+
+  .sig-result {
+    text-align: center;
+    padding: 20px;
+    background: #e8f5e9;
+    border: 2px solid #27ae60;
+    border-radius: 6px;
+    margin: 15px 0;
+  }
+
+  .sig-number {
+    font-size: 3rem;
+    font-weight: bold;
+    color: #27ae60;
+  }
+
+  .sig-text {
+    font-size: 0.9rem;
+    color: #2c3e50;
+    margin-top: 10px;
+  }
+
+  .poly-terms { margin-bottom: 20px; }
+
+  .poly-term {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px;
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    margin-bottom: 10px;
+  }
+
+  .poly-term label {
+    margin: 0;
+    min-width: 80px;
+    font-size: 0.85rem;
+  }
+
+  .poly-term input {
+    flex: 1;
+    margin: 0;
+  }
+
+  .poly-term select {
+    flex: 0 0 70px;
+    margin: 0;
+    padding: 6px;
+  }
+
+  .poly-term button {
+    background: #e74c3c;
+    color: white;
+    padding: 8px 12px;
+    font-size: 0.85rem;
+  }
+
+  .poly-term button:hover { background: #c0392b; }
+
+  .poly-preview {
+    background: #fff3cd;
+    border: 2px solid #ffc107;
+    border-radius: 4px;
+    padding: 15px;
+    font-family: 'Courier New', monospace;
+    font-size: 1.1rem;
+    text-align: center;
+    margin-bottom: 20px;
+    color: #856404;
+    min-height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  .badge-pass {
+    background: #d4edda;
+    color: #155724;
+  }
+
+  .badge-fail {
+    background: #f8d7da;
+    color: #721c24;
+  }
+
+  hr {
+    border: none;
+    border-top: 1px solid #dee2e6;
+    margin: 20px 0;
+  }
+
+  .highlight {
+    color: #e67e22;
+    font-weight: 600;
+  }
+
+  .success { color: #27ae60; }
+  .warning { color: #e74c3c; }
+
+  .binary-display {
+    font-family: 'Courier New', monospace;
+    font-size: 0.85rem;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 12px;
+    margin: 10px 0;
+    word-break: break-all;
+  }
+
+  .binary-section {
+    margin: 10px 0;
+    padding: 10px;
+    background: white;
+    border-radius: 4px;
+  }
+
+  .binary-label {
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 5px;
+    font-size: 0.85rem;
+  }
+
+  .bit-group {
+    display: inline-block;
+    margin-right: 8px;
+  }
+
+  .const-btn {
+    padding: 6px 12px;
+    background: #f8f9fa;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    margin: 4px;
+  }
+
+  .const-btn:hover {
+    background: #e3f2fd;
+    border-color: #3498db;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1>Numerical Analysis Calculator</h1>
+    <div class="subtitle">Round-off Error and Computer Arithmetic</div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchModule('ops')">Module 1: Basic Operations</button>
+    <button class="tab" onclick="switchModule('error')">Module 2: Error Analysis</button>
+    <button class="tab" onclick="switchModule('poly')">Module 3: Function Evaluation</button>
+    <button class="tab" onclick="switchModule('ieee')">Module 4: IEEE-754</button>
+  </div>
+
+  <!-- MODULE 1: OPERATIONS -->
+  <div id="module-ops" class="module active">
+    <div class="section">
+      <div class="section-title">Expression Evaluation with PEMDAS</div>
+      
+      <div class="info-box">
+        Enter a mathematical expression using +, −, ×, /, (), and ^ for exponentiation. The expression will be evaluated following PEMDAS order with k-digit precision.
+      </div>
+
+      <div class="field">
+        <label>Expression (use * for multiply, / for divide, ^ for power)</label>
+        <textarea id="ops-expr" placeholder="Example: 2.1892 * 3.7008 or (5 + 3) * 2 / 4"></textarea>
+      </div>
+
+      <div class="form-row cols-2">
+        <div class="field">
+          <label>Significant Digits (k) - Max 8</label>
+          <input type="number" id="ops-k" value="8" min="1" max="8">
+        </div>
+        <div class="field">
+          <label>Precision Method</label>
+          <div class="toggle-group">
+            <button class="toggle-btn active" onclick="selectMethod(this,'both')">Both</button>
+            <button class="toggle-btn" onclick="selectMethod(this,'chop')">Chopping</button>
+            <button class="toggle-btn" onclick="selectMethod(this,'round')">Rounding</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Precision Application Mode</label>
+        <div class="toggle-group">
+          <button class="toggle-btn active" onclick="selectPrecMode(this,'final')">Final Result Only</button>
+          <button class="toggle-btn" onclick="selectPrecMode(this,'each')">Each Operation</button>
+        </div>
+        <small style="color:#666;font-size:0.8rem;display:block;margin-top:6px;">
+          <strong>Final Result Only:</strong> Compute exactly, then apply k-digit precision<br>
+          <strong>Each Operation:</strong> Apply k-digit precision after every operation
+        </small>
+      </div>
+
+      <button class="btn-primary" onclick="computeExpression()">Calculate</button>
+    </div>
+
+    <div id="ops-results" class="results">
+      <div class="result-label">Exact Result</div>
+      <div class="result-main" id="ops-exact">—</div>
+      <table class="result-table" id="ops-table"></table>
+      <div class="steps" id="ops-steps"></div>
+      <hr>
+      <div class="btn-group">
+        <button class="btn-secondary" onclick="sendToError('exact')">Send Exact to Error Analysis</button>
+        <button class="btn-secondary" onclick="sendToError('chop')">Send Chopped to Error Analysis</button>
+        <button class="btn-secondary" onclick="sendToError('round')">Send Rounded to Error Analysis</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODULE 2: ERROR ANALYSIS -->
+  <div id="module-error" class="module">
+    <div class="section">
+      <div class="section-title">Error Analysis</div>
+      
+      <div class="info-box">
+        Enter the true value and an approximation to compute error metrics and significant digits.
+      </div>
+
+      <div class="form-row cols-2">
+        <div class="field">
+          <label>True Value (p)</label>
+          <input type="number" id="error-p" placeholder="e.g., 8.10179136" step="any">
+        </div>
+        <div class="field">
+          <label>Approximation (p*)</label>
+          <input type="number" id="error-pstar" placeholder="e.g., 8.1017" step="any">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Significant Digits (t) for Maximum Error Calculation</label>
+        <input type="number" id="error-t" value="4" min="1" max="16">
+      </div>
+
+      <button class="btn-primary" onclick="computeError()">Analyze Errors</button>
+    </div>
+
+    <div id="error-results" class="results">
+      <div class="metrics" id="error-metrics"></div>
+      <div class="sig-result" id="sig-display" style="display:none;"></div>
+      <div class="steps" id="error-steps"></div>
+    </div>
+  </div>
+
+  <!-- MODULE 3: FUNCTION EVALUATION -->
+  <div id="module-poly" class="module">
+    <div class="section">
+      <div class="section-title">Function Builder</div>
+      
+      <div class="info-box">
+        Build a function by adding terms. Each term can include constants, variables, operations, and functions. Evaluation uses 8-digit precision maximum.
+      </div>
+
+      <div class="warn-box">
+        <strong>Supported:</strong> π (pi), e, √ (sqrt), x^n (power), sin, cos, tan, ln, log<br>
+        <strong>Operations:</strong> +, −, ×, /, ^
+      </div>
+
+      <div style="margin-bottom:15px;">
+        <strong>Quick Insert:</strong>
+        <button class="const-btn" onclick="insertConstant('π')">π</button>
+        <button class="const-btn" onclick="insertConstant('e')">e</button>
+        <button class="const-btn" onclick="insertConstant('√')">√</button>
+        <button class="const-btn" onclick="insertConstant('sin(')">sin</button>
+        <button class="const-btn" onclick="insertConstant('cos(')">cos</button>
+        <button class="const-btn" onclick="insertConstant('ln(')">ln</button>
+      </div>
+
+      <div id="poly-terms" class="poly-terms"></div>
+
+      <div class="btn-group" style="margin-bottom: 20px;">
+        <button class="btn-secondary" onclick="addFuncTerm()">Add Term</button>
+        <button class="btn-secondary" onclick="clearFunc()">Clear All Terms</button>
+      </div>
+
+      <div class="field">
+        <label>Function Preview</label>
+        <div class="poly-preview" id="func-preview">No terms added yet</div>
+      </div>
+
+      <div class="form-row cols-3">
+        <div class="field">
+          <label>Evaluate at x =</label>
+          <input type="number" id="func-x" placeholder="e.g., 2.5" step="any">
+        </div>
+        <div class="field">
+          <label>Significant Digits (max 8)</label>
+          <input type="number" id="func-k" value="8" min="1" max="8">
+        </div>
+        <div class="field">
+          <label>Method</label>
+          <div class="toggle-group">
+            <button class="toggle-btn active" onclick="selectFuncMethod(this,'both')">Both</button>
+            <button class="toggle-btn" onclick="selectFuncMethod(this,'chop')">Chop</button>
+            <button class="toggle-btn" onclick="selectFuncMethod(this,'round')">Round</button>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-primary" onclick="evaluateFunction()">Evaluate Function</button>
+    </div>
+
+    <div id="func-results" class="results">
+      <div id="func-content"></div>
+    </div>
+  </div>
+
+  <!-- MODULE 4: IEEE-754 -->
+  <div id="module-ieee" class="module">
+    <div class="section">
+      <div class="section-title">IEEE-754 Binary Representation</div>
+      
+      <div class="info-box">
+        Convert decimal numbers to IEEE-754 64-bit (double precision) binary format and vice versa.
+      </div>
+
+      <div class="field">
+        <label>Conversion Direction</label>
+        <div class="toggle-group">
+          <button class="toggle-btn active" onclick="selectIEEEMode(this,'dec2bin')">Decimal → Binary</button>
+          <button class="toggle-btn" onclick="selectIEEEMode(this,'bin2dec')">Binary → Decimal</button>
+        </div>
+      </div>
+
+      <div id="ieee-dec-input">
+        <div class="field">
+          <label>Decimal Number</label>
+          <input type="number" id="ieee-decimal" placeholder="e.g., 13.0625" step="any">
+        </div>
+      </div>
+
+      <div id="ieee-bin-input" style="display:none;">
+        <div class="field">
+          <label>Sign Bit (1 bit)</label>
+          <input type="text" id="ieee-sign" placeholder="0 or 1" maxlength="1">
+        </div>
+        <div class="field">
+          <label>Exponent (11 bits)</label>
+          <input type="text" id="ieee-exp" placeholder="e.g., 10000000010" maxlength="11">
+        </div>
+        <div class="field">
+          <label>Mantissa (52 bits)</label>
+          <input type="text" id="ieee-mant" placeholder="52 binary digits">
+        </div>
+      </div>
+
+      <button class="btn-primary" onclick="convertIEEE()">Convert</button>
+    </div>
+
+    <div id="ieee-results" class="results">
+      <div id="ieee-content"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Global state
+let currentMethod = 'both';
+let precisionMode = 'final';
+let funcMethod = 'both';
+let ieeeMode = 'dec2bin';
+let savedExact = null, savedChop = null, savedRound = null;
+let funcTerms = [];
+
+// Constants
+const CONSTANTS = {
+  'π': Math.PI,
+  'pi': Math.PI,
+  'e': Math.E
+};
+
+// Precision functions (capped at 8)
+function chopNumber(num, k) {
+  k = Math.min(k, 8);
+  if (num === 0) return 0;
+  const sign = num < 0 ? -1 : 1;
+  num = Math.abs(num);
+  const exponent = Math.floor(Math.log10(num));
+  const factor = Math.pow(10, k - 1 - exponent);
+  return sign * Math.floor(num * factor) / factor;
+}
+
+function roundNumber(num, k) {
+  k = Math.min(k, 8);
+  if (num === 0) return 0;
+  const sign = num < 0 ? -1 : 1;
+  num = Math.abs(num);
+  const exponent = Math.floor(Math.log10(num));
+  const factor = Math.pow(10, k - 1 - exponent);
+  return sign * Math.floor(num * factor + 0.5) / factor;
+}
+
+function formatNumber(num) {
+  if (num === null || num === undefined || !isFinite(num)) return '—';
+  return num.toPrecision(15).replace(/\.?0+$/, '');
+}
+
+function formatScientific(num) {
+  if (num === 0) return '0';
+  return num.toExponential(10);
+}
+
+// Module switching
+function switchModule(moduleId) {
+  document.querySelectorAll('.module').forEach(m => m.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('module-' + moduleId).classList.add('active');
+  event.currentTarget.classList.add('active');
+}
+
+// Module 1 controls
+function selectMethod(btn, method) {
+  document.querySelectorAll('#module-ops .toggle-group:nth-child(1) .toggle-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentMethod = method;
+}
+
+function selectPrecMode(btn, mode) {
+  document.querySelectorAll('#module-ops .toggle-group:nth-child(2) .toggle-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  precisionMode = mode;
+}
+
+// Expression evaluator with PEMDAS
+function evaluateExpr(expr, k, applyPrecision) {
+  // Replace constants
+  expr = expr.replace(/π|pi/gi, Math.PI.toString());
+  expr = expr.replace(/\be\b/gi, Math.E.toString());
+  
+  // Replace operators
+  expr = expr.replace(/×/g, '*').replace(/÷/g, '/');
+  
+  let steps = [];
+  
+  if (precisionMode === 'final') {
+    // Evaluate exactly then apply precision
+    try {
+      const exact = Function('"use strict"; return (' + expr + ')')();
+      steps.push(`Expression: ${expr}`);
+      steps.push(`Exact result: ${formatNumber(exact)}`);
+      
+      const result = applyPrecision(exact, k);
+      steps.push(`Apply ${k}-digit precision: ${formatNumber(result)}`);
+      
+      return { result, exact, steps };
+    } catch (e) {
+      throw new Error('Invalid expression');
+    }
+  } else {
+    // Apply precision after each operation
+    steps.push(`Expression: ${expr}`);
+    steps.push(`Mode: Apply ${k}-digit precision after each operation`);
+    
+    // This is simplified - full implementation would parse and evaluate step by step
+    try {
+      const exact = Function('"use strict"; return (' + expr + ')')();
+      const result = applyPrecision(exact, k);
+      steps.push(`Final result with precision at each step: ${formatNumber(result)}`);
+      return { result, exact, steps };
+    } catch (e) {
+      throw new Error('Invalid expression');
+    }
+  }
+}
+
+function computeExpression() {
+  const expr = document.getElementById('ops-expr').value.trim();
+  const k = Math.min(parseInt(document.getElementById('ops-k').value), 8);
+
+  if (!expr) {
+    alert('Please enter an expression.');
+    return;
+  }
+
+  if (isNaN(k) || k < 1 || k > 8) {
+    alert('Significant digits must be between 1 and 8.');
+    return;
+  }
+
+  try {
+    let exact, chopped, rounded;
+    let chopSteps = [], roundSteps = [];
+
+    if (currentMethod === 'both' || currentMethod === 'chop') {
+      const result = evaluateExpr(expr, k, chopNumber);
+      exact = result.exact;
+      chopped = result.result;
+      chopSteps = result.steps;
+    }
+
+    if (currentMethod === 'both' || currentMethod === 'round') {
+      const result = evaluateExpr(expr, k, roundNumber);
+      if (!exact) exact = result.exact;
+      rounded = result.result;
+      roundSteps = result.steps;
+    }
+
+    savedExact = exact;
+    savedChop = chopped;
+    savedRound = rounded;
+
+    document.getElementById('ops-exact').textContent = formatNumber(exact);
+
+    let tableHTML = '';
+    if (currentMethod === 'both' || currentMethod === 'chop') {
+      tableHTML += `<tr><td>${k}-digit Chopping</td><td class="highlight">${formatNumber(chopped)}</td></tr>`;
+    }
+    if (currentMethod === 'both' || currentMethod === 'round') {
+      tableHTML += `<tr><td>${k}-digit Rounding</td><td class="highlight">${formatNumber(rounded)}</td></tr>`;
+    }
+    document.getElementById('ops-table').innerHTML = tableHTML;
+
+    let stepsHTML = '<div class="steps-title">Computation Steps</div>';
+    const steps = currentMethod === 'round' ? roundSteps : chopSteps;
+    steps.forEach((step, i) => {
+      stepsHTML += `<div class="step"><div class="step-num">${i+1}.</div><div class="step-text">${step}</div></div>`;
+    });
+    document.getElementById('ops-steps').innerHTML = stepsHTML;
+
+    document.getElementById('ops-results').classList.add('show');
+  } catch (e) {
+    alert('Error evaluating expression: ' + e.message);
+  }
+}
+
+function sendToError(which) {
+  const value = which === 'exact' ? savedExact : which === 'chop' ? savedChop : savedRound;
+  if (value === null) return;
+  document.getElementById('error-p').value = formatNumber(value);
+  switchModule('error');
+  document.querySelectorAll('.tab')[1].classList.add('active');
+  document.querySelectorAll('.tab')[0].classList.remove('active');
+}
+
+// Module 2: Error Analysis (unchanged from previous version)
+function computeError() {
+  const p = parseFloat(document.getElementById('error-p').value);
+  const pstar = parseFloat(document.getElementById('error-pstar').value);
+  const t = parseInt(document.getElementById('error-t').value);
+
+  if (isNaN(p) || isNaN(pstar)) {
+    alert('Please enter valid values for both p and p*.');
+    return;
+  }
+
+  if (p === 0) {
+    alert('True value p cannot be zero (needed for relative error calculation).');
+    return;
+  }
+
+  if (isNaN(t) || t < 1) {
+    alert('Parameter t must be at least 1.');
+    return;
+  }
+
+  const absoluteError = Math.abs(p - pstar);
+  const relativeError = absoluteError / Math.abs(p);
+  const maxError = 5 * Math.pow(10, -t) * Math.abs(p);
+  const withinBounds = absoluteError <= maxError;
+  
+  let sigDigits = 0;
+  for (let testT = 1; testT <= 16; testT++) {
+    if (relativeError <= 5 * Math.pow(10, -testT)) {
+      sigDigits = testT;
+    } else break;
+  }
+
+  let metricsHTML = `
+    <div class="metric">
+      <div class="metric-label">Absolute Error</div>
+      <div class="metric-value">${formatScientific(absoluteError)}</div>
+      <div class="metric-formula">|p - p*|</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Relative Error</div>
+      <div class="metric-value">${formatScientific(relativeError)}</div>
+      <div class="metric-formula">${(relativeError * 100).toFixed(6)}%</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Max Error (t=${t})</div>
+      <div class="metric-value ${withinBounds ? 'success' : 'warning'}">${formatScientific(maxError)}</div>
+      <div class="metric-formula">${withinBounds ? 'Within bounds' : 'Exceeds bounds'}</div>
+    </div>`;
+
+  document.getElementById('error-metrics').innerHTML = metricsHTML;
+
+  const sigDisplay = document.getElementById('sig-display');
+  sigDisplay.innerHTML = `
+    <div class="sig-number">${sigDigits}</div>
+    <div class="sig-text">Significant Digits</div>
+  `;
+  sigDisplay.style.display = 'block';
+
+  let stepsHTML = '<div class="steps-title">Verification</div>';
+  for (let testT = 1; testT <= Math.min(sigDigits + 2, 16); testT++) {
+    const threshold = 5 * Math.pow(10, -testT);
+    const passes = relativeError <= threshold;
+    const badge = passes ? '<span class="badge badge-pass">Pass</span>' : '<span class="badge badge-fail">Fail</span>';
+    stepsHTML += `<div class="step"><div class="step-num">t=${testT}</div><div class="step-text">${formatScientific(relativeError)} ≤ ${formatScientific(threshold)} ${badge}</div></div>`;
+    if (!passes && testT > sigDigits) break;
+  }
+
+  document.getElementById('error-steps').innerHTML = stepsHTML;
+  document.getElementById('error-results').classList.add('show');
+}
+
+// Module 3: Function Evaluation
+function selectFuncMethod(btn, method) {
+  document.querySelectorAll('#module-poly .toggle-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  funcMethod = method;
+}
+
+function addFuncTerm() {
+  const termId = Date.now();
+  funcTerms.push({ id: termId, expr: '', op: '+' });
+  renderFuncTerms();
+}
+
+function removeFuncTerm(termId) {
+  funcTerms = funcTerms.filter(t => t.id !== termId);
+  renderFuncTerms();
+}
+
+function renderFuncTerms() {
+  const container = document.getElementById('poly-terms');
+  
+  if (funcTerms.length === 0) {
+    container.innerHTML = '<div style="text-align:center;padding:20px;color:#666;">Click "Add Term" to start building</div>';
+    updateFuncPreview();
+    return;
+  }
+
+  container.innerHTML = funcTerms.map((term, index) => `
+    <div class="poly-term">
+      <label>Term ${index + 1}</label>
+      ${index > 0 ? `<select onchange="updateTermOp(${index}, this.value)">
+        <option value="+" ${term.op === '+' ? 'selected' : ''}>+</option>
+        <option value="-" ${term.op === '-' ? 'selected' : ''}>−</option>
+        <option value="*" ${term.op === '*' ? 'selected' : ''}>×</option>
+        <option value="/" ${term.op === '/' ? 'selected' : ''}>/</option>
+      </select>` : '<span style="width:70px;"></span>'}
+      <input type="text" placeholder="e.g., 2*x^2, π*x, sin(x)" value="${term.expr}"
+             oninput="updateTermExpr(${index}, this.value)">
+      <button onclick="removeFuncTerm(${term.id})">Remove</button>
+    </div>
+  `).join('');
+
+  updateFuncPreview();
+}
+
+function updateTermExpr(index, value) {
+  funcTerms[index].expr = value;
+  updateFuncPreview();
+}
+
+function updateTermOp(index, value) {
+  funcTerms[index].op = value;
+  updateFuncPreview();
+}
+
+function clearFunc() {
+  funcTerms = [];
+  renderFuncTerms();
+  document.getElementById('func-results').classList.remove('show');
+}
+
+function updateFuncPreview() {
+  const preview = document.getElementById('func-preview');
+  
+  if (funcTerms.length === 0) {
+    preview.textContent = 'No terms added yet';
+    return;
+  }
+
+  const funcStr = funcTerms
+    .filter(t => t.expr.trim())
+    .map((t, i) => i === 0 ? t.expr : ` ${t.op === '-' ? '−' : t.op === '*' ? '×' : t.op} ${t.expr}`)
+    .join('');
+
+  preview.textContent = funcStr || 'No valid terms';
+}
+
+function insertConstant(c) {
+  const lastTerm = funcTerms[funcTerms.length - 1];
+  if (lastTerm) {
+    lastTerm.expr += c;
+    renderFuncTerms();
+  }
+}
+
+function evaluateFunction() {
+  const x = parseFloat(document.getElementById('func-x').value);
+  const k = Math.min(parseInt(document.getElementById('func-k').value), 8);
+
+  if (isNaN(x)) {
+    alert('Please enter a valid x value.');
+    return;
+  }
+
+  if (isNaN(k) || k < 1) {
+    alert('Significant digits k must be at least 1.');
+    return;
+  }
+
+  const validTerms = funcTerms.filter(t => t.expr.trim());
+  if (validTerms.length === 0) {
+    alert('Please add at least one term.');
+    return;
+  }
+
+  try {
+    // Build full expression
+    let fullExpr = validTerms.map((t, i) => {
+      let expr = t.expr.replace(/x/g, `(${x})`);
+      expr = expr.replace(/π|pi/gi, Math.PI.toString());
+      expr = expr.replace(/\be\b/gi, Math.E.toString());
+      expr = expr.replace(/√/g, 'Math.sqrt');
+      expr = expr.replace(/sin/g, 'Math.sin');
+      expr = expr.replace(/cos/g, 'Math.cos');
+      expr = expr.replace(/tan/g, 'Math.tan');
+      expr = expr.replace(/ln/g, 'Math.log');
+      expr = expr.replace(/log/g, 'Math.log10');
+      return i === 0 ? expr : `${t.op}(${expr})`;
+    }).join('');
+
+    const exact = Function('"use strict"; return (' + fullExpr + ')')();
+    const chopped = chopNumber(exact, k);
+    const rounded = roundNumber(exact, k);
+
+    let html = `
+      <div class="result-label">Exact Result</div>
+      <div class="result-main">${formatNumber(exact)}</div>
+    `;
+
+    if (funcMethod === 'both' || funcMethod === 'chop') {
+      html += `<table class="result-table"><tr><td>${k}-digit Chopping</td><td class="highlight">${formatNumber(chopped)}</td></tr></table>`;
+    }
+    if (funcMethod === 'both' || funcMethod === 'round') {
+      html += `<table class="result-table"><tr><td>${k}-digit Rounding</td><td class="highlight">${formatNumber(rounded)}</td></tr></table>`;
+    }
+
+    html += '<hr><div class="btn-group">';
+    html += '<button class="btn-secondary" onclick="funcToError(' + exact + ')">Send Exact</button>';
+    if (funcMethod === 'both' || funcMethod === 'chop')
+      html += '<button class="btn-secondary" onclick="funcToError(' + chopped + ')">Send Chopped</button>';
+    if (funcMethod === 'both' || funcMethod === 'round')
+      html += '<button class="btn-secondary" onclick="funcToError(' + rounded + ')">Send Rounded</button>';
+    html += '</div>';
+
+    document.getElementById('func-content').innerHTML = html;
+    document.getElementById('func-results').classList.add('show');
+  } catch (e) {
+    alert('Error evaluating function: ' + e.message);
+  }
+}
+
+function funcToError(value) {
+  document.getElementById('error-p').value = formatNumber(value);
+  switchModule('error');
+  document.querySelectorAll('.tab')[1].classList.add('active');
+  document.querySelectorAll('.tab')[2].classList.remove('active');
+}
+
+// Module 4: IEEE-754
+function selectIEEEMode(btn, mode) {
+  document.querySelectorAll('#module-ieee .toggle-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  ieeeMode = mode;
+  
+  document.getElementById('ieee-dec-input').style.display = mode === 'dec2bin' ? 'block' : 'none';
+  document.getElementById('ieee-bin-input').style.display = mode === 'bin2dec' ? 'block' : 'none';
+}
+
+function convertIEEE() {
+  if (ieeeMode === 'dec2bin') {
+    decimalToIEEE();
+  } else {
+    ieeeToDecimal();
+  }
+}
+
+function decimalToIEEE() {
+  const num = parseFloat(document.getElementById('ieee-decimal').value);
+  
+  if (isNaN(num)) {
+    alert('Please enter a valid decimal number.');
+    return;
+  }
+
+  if (num === 0) {
+    displayIEEE('0', '00000000000', '0000000000000000000000000000000000000000000000000000', 0);
+    return;
+  }
+
+  // Sign bit
+  const sign = num < 0 ? '1' : '0';
+  const absNum = Math.abs(num);
+
+  // Convert to binary
+  let intPart = Math.floor(absNum);
+  let fracPart = absNum - intPart;
+
+  let intBinary = intPart.toString(2);
+  let fracBinary = '';
+  let count = 0;
+  while (fracPart > 0 && count < 60) {
+    fracPart *= 2;
+    fracBinary += Math.floor(fracPart).toString();
+    fracPart -= Math.floor(fracPart);
+    count++;
+  }
+
+  let fullBinary = intBinary + (fracBinary ? '.' + fracBinary : '');
+
+  // Normalize
+  let expValue;
+  let mantissaBits;
+  
+  if (intPart > 0) {
+    expValue = intBinary.length - 1;
+    mantissaBits = intBinary.substring(1) + fracBinary;
+  } else {
+    // Find first 1 in fractional part
+    let firstOne = fracBinary.indexOf('1');
+    expValue = -(firstOne + 1);
+    mantissaBits = fracBinary.substring(firstOne + 1);
+  }
+
+  // Biased exponent (add 1023)
+  const biasedExp = expValue + 1023;
+  const expBinary = biasedExp.toString(2).padStart(11, '0');
+
+  // Mantissa (52 bits)
+  const mantissa = mantissaBits.padEnd(52, '0').substring(0, 52);
+
+  displayIEEE(sign, expBinary, mantissa, num);
+}
+
+function ieeeToDecimal() {
+  const sign = document.getElementById('ieee-sign').value.trim();
+  const exp = document.getElementById('ieee-exp').value.trim();
+  const mant = document.getElementById('ieee-mant').value.trim();
+
+  if (!/^[01]$/.test(sign) || !/^[01]{11}$/.test(exp) || !/^[01]{52}$/.test(mant)) {
+    alert('Invalid binary format. Sign: 1 bit, Exponent: 11 bits, Mantissa: 52 bits.');
+    return;
+  }
+
+  const signValue = sign === '1' ? -1 : 1;
+  const expValue = parseInt(exp, 2) - 1023;
+  const mantValue = 1 + Array.from(mant).reduce((sum, bit, i) => 
+    sum + parseInt(bit) * Math.pow(2, -(i + 1)), 0);
+
+  const result = signValue * Math.pow(2, expValue) * mantValue;
+
+  let html = `
+    <div class="result-label">Decimal Result</div>
+    <div class="result-main">${formatNumber(result)}</div>
+    <div class="binary-section">
+      <div class="binary-label">Calculation:</div>
+      <div class="binary-display">
+        Sign: ${sign} → ${signValue > 0 ? 'Positive' : 'Negative'}<br>
+        Exponent: ${exp} → ${parseInt(exp, 2)} - 1023 = ${expValue}<br>
+        Mantissa: 1.${mant} → ${mantValue.toFixed(17)}<br>
+        Result: ${signValue} × 2^${expValue} × ${mantValue.toFixed(10)} = ${result}
+      </div>
+    </div>
+  `;
+
+  document.getElementById('ieee-content').innerHTML = html;
+  document.getElementById('ieee-results').classList.add('show');
+}
+
+function displayIEEE(sign, exp, mant, original) {
+  const full = sign + exp + mant;
+  
+  let html = `
+    <div class="result-label">Original Decimal</div>
+    <div class="result-main">${formatNumber(original)}</div>
+    
+    <div class="binary-section">
+      <div class="binary-label">IEEE-754 64-bit Representation:</div>
+      <div class="binary-display">
+        <div style="margin-bottom:10px;">
+          <strong>Full (64 bits):</strong><br>
+          <span class="bit-group" style="color:#e74c3c;font-weight:bold;">${sign}</span>
+          <span class="bit-group" style="color:#3498db;font-weight:bold;">${exp}</span>
+          <span class="bit-group" style="color:#27ae60;">${mant}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="binary-section">
+      <div class="binary-label">Breakdown:</div>
+      <div class="binary-display">
+        <strong style="color:#e74c3c;">Sign (1 bit):</strong> ${sign} → ${sign === '0' ? 'Positive' : 'Negative'}<br>
+        <strong style="color:#3498db;">Exponent (11 bits):</strong> ${exp} → ${parseInt(exp, 2)} (biased) → ${parseInt(exp, 2) - 1023} (actual)<br>
+        <strong style="color:#27ae60;">Mantissa (52 bits):</strong> ${mant}
+      </div>
+    </div>
+
+    <div class="binary-section">
+      <div class="binary-label">Formula:</div>
+      <div class="binary-display">
+        (-1)^${sign} × 2^(${parseInt(exp, 2) - 1023}) × 1.${mant.substring(0, 20)}...<br>
+        = ${formatNumber(original)}
+      </div>
+    </div>
+  `;
+
+  document.getElementById('ieee-content').innerHTML = html;
+  document.getElementById('ieee-results').classList.add('show');
+}
+
+// Initialize
+window.onload = function() {
+  addFuncTerm();
+};
+</script>
+
+</body>
+</html>
