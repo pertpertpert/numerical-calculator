@@ -520,7 +520,7 @@
   </header>
 
   <div class="tabs">
-    <button class="tab active" onclick="switchModule('ops')">Module 1: Basic Operations</button>
+    <button class="tab active" onclick="switchModule('ops')">Module 1: Operations</button>
     <button class="tab" onclick="switchModule('error')">Module 2: Error Analysis</button>
     <button class="tab" onclick="switchModule('poly')">Module 3: Function Evaluation</button>
     <button class="tab" onclick="switchModule('ieee')">Module 4: IEEE-754</button>
@@ -532,7 +532,7 @@
       <div class="section-title">Expression Evaluation with PEMDAS</div>
       
       <div class="info-box">
-        Enter a mathematical expression using +, −, ×, /, (), and ^ for exponentiation. The expression will be evaluated following PEMDAS order with k-digit precision.
+        Enter a mathematical expression using +, −, ×, /, (), and ^ for exponentiation. The expression will be evaluated following PEMDAS order, applying k-digit precision after each operation.
       </div>
 
       <div class="field">
@@ -540,31 +540,26 @@
         <textarea id="ops-expr" placeholder="Example: 2.1892 * 3.7008 or (5 + 3) * 2 / 4"></textarea>
       </div>
 
-      <div class="form-row cols-2">
+      <div class="form-row cols-3">
         <div class="field">
           <label>Significant Digits (k) - Max 8</label>
           <input type="number" id="ops-k" value="8" min="1" max="8">
         </div>
         <div class="field">
+          <label>Rounding Mode</label>
+          <div class="toggle-group">
+            <button class="toggle-btn active" onclick="selectRoundMode(this,'sig')">Sig Digits</button>
+            <button class="toggle-btn" onclick="selectRoundMode(this,'dec')">Decimal Places</button>
+          </div>
+        </div>
+        <div class="field">
           <label>Precision Method</label>
           <div class="toggle-group">
             <button class="toggle-btn active" onclick="selectMethod(this,'both')">Both</button>
-            <button class="toggle-btn" onclick="selectMethod(this,'chop')">Chopping</button>
-            <button class="toggle-btn" onclick="selectMethod(this,'round')">Rounding</button>
+            <button class="toggle-btn" onclick="selectMethod(this,'chop')">Chop</button>
+            <button class="toggle-btn" onclick="selectMethod(this,'round')">Round</button>
           </div>
         </div>
-      </div>
-
-      <div class="field">
-        <label>Precision Application Mode</label>
-        <div class="toggle-group">
-          <button class="toggle-btn active" onclick="selectPrecMode(this,'final')">Final Result Only</button>
-          <button class="toggle-btn" onclick="selectPrecMode(this,'each')">Each Operation</button>
-        </div>
-        <small style="color:#666;font-size:0.8rem;display:block;margin-top:6px;">
-          <strong>Final Result Only:</strong> Compute exactly, then apply k-digit precision<br>
-          <strong>Each Operation:</strong> Apply k-digit precision after every operation
-        </small>
       </div>
 
       <button class="btn-primary" onclick="computeExpression()">Calculate</button>
@@ -577,9 +572,8 @@
       <div class="steps" id="ops-steps"></div>
       <hr>
       <div class="btn-group">
-        <button class="btn-secondary" onclick="sendToError('exact')">Send Exact to Error Analysis</button>
-        <button class="btn-secondary" onclick="sendToError('chop')">Send Chopped to Error Analysis</button>
-        <button class="btn-secondary" onclick="sendToError('round')">Send Rounded to Error Analysis</button>
+        <button class="btn-secondary" onclick="sendBothToError('chop')">Send Exact + Chopped to Error Analysis</button>
+        <button class="btn-secondary" onclick="sendBothToError('round')">Send Exact + Rounded to Error Analysis</button>
       </div>
     </div>
   </div>
@@ -657,8 +651,8 @@
 
       <div class="form-row cols-3">
         <div class="field">
-          <label>Evaluate at x =</label>
-          <input type="number" id="func-x" placeholder="e.g., 2.5" step="any">
+          <label>Evaluate at x = (leave empty for constants only)</label>
+          <input type="number" id="func-x" placeholder="e.g., 2.5 (optional)" step="any">
         </div>
         <div class="field">
           <label>Significant Digits (max 8)</label>
@@ -733,7 +727,7 @@
 <script>
 // Global state
 let currentMethod = 'both';
-let precisionMode = 'final';
+let roundingMode = 'sig'; // 'sig' for significant digits, 'dec' for decimal places
 let funcMethod = 'both';
 let ieeeMode = 'dec2bin';
 let savedExact = null, savedChop = null, savedRound = null;
@@ -750,21 +744,37 @@ const CONSTANTS = {
 function chopNumber(num, k) {
   k = Math.min(k, 8);
   if (num === 0) return 0;
-  const sign = num < 0 ? -1 : 1;
-  num = Math.abs(num);
-  const exponent = Math.floor(Math.log10(num));
-  const factor = Math.pow(10, k - 1 - exponent);
-  return sign * Math.floor(num * factor) / factor;
+  
+  if (roundingMode === 'dec') {
+    // Decimal places mode
+    const factor = Math.pow(10, k);
+    return Math.floor(num * factor) / factor;
+  } else {
+    // Significant digits mode
+    const sign = num < 0 ? -1 : 1;
+    num = Math.abs(num);
+    const exponent = Math.floor(Math.log10(num));
+    const factor = Math.pow(10, k - 1 - exponent);
+    return sign * Math.floor(num * factor) / factor;
+  }
 }
 
 function roundNumber(num, k) {
   k = Math.min(k, 8);
   if (num === 0) return 0;
-  const sign = num < 0 ? -1 : 1;
-  num = Math.abs(num);
-  const exponent = Math.floor(Math.log10(num));
-  const factor = Math.pow(10, k - 1 - exponent);
-  return sign * Math.floor(num * factor + 0.5) / factor;
+  
+  if (roundingMode === 'dec') {
+    // Decimal places mode
+    const factor = Math.pow(10, k);
+    return Math.floor(num * factor + 0.5) / factor;
+  } else {
+    // Significant digits mode
+    const sign = num < 0 ? -1 : 1;
+    num = Math.abs(num);
+    const exponent = Math.floor(Math.log10(num));
+    const factor = Math.pow(10, k - 1 - exponent);
+    return sign * Math.floor(num * factor + 0.5) / factor;
+  }
 }
 
 function formatNumber(num) {
@@ -777,6 +787,18 @@ function formatScientific(num) {
   return num.toExponential(10);
 }
 
+function smartFormat(num, maxDecimals = 10) {
+  if (num === 0) return '0';
+  if (Math.abs(num) < 0.0001 || Math.abs(num) > 1000000) {
+    return num.toExponential(6).replace(/\.?0+e/, 'e');
+  }
+  return parseFloat(num.toPrecision(maxDecimals)).toString();
+}
+
+function formatThreshold(t) {
+  return `5×10⁻${t}`;
+}
+
 // Module switching
 function switchModule(moduleId) {
   document.querySelectorAll('.module').forEach(m => m.classList.remove('active'));
@@ -787,56 +809,198 @@ function switchModule(moduleId) {
 
 // Module 1 controls
 function selectMethod(btn, method) {
-  document.querySelectorAll('#module-ops .toggle-group:nth-child(1) .toggle-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#module-ops .toggle-group .toggle-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   currentMethod = method;
 }
 
-function selectPrecMode(btn, mode) {
-  document.querySelectorAll('#module-ops .toggle-group:nth-child(2) .toggle-btn').forEach(b => b.classList.remove('active'));
+function selectRoundMode(btn, mode) {
+  const buttons = Array.from(document.querySelectorAll('#module-ops .toggle-group .toggle-btn'));
+  const modeButtons = buttons.filter(b => b.textContent.includes('Sig') || b.textContent.includes('Decimal'));
+  modeButtons.forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  precisionMode = mode;
+  roundingMode = mode;
 }
 
-// Expression evaluator with PEMDAS
-function evaluateExpr(expr, k, applyPrecision) {
-  // Replace constants
-  expr = expr.replace(/π|pi/gi, Math.PI.toString());
-  expr = expr.replace(/\be\b/gi, Math.E.toString());
+function sendBothToError(which) {
+  const exact = savedExact;
+  const approx = which === 'chop' ? savedChop : savedRound;
+  if (exact === null || approx === null) return;
   
-  // Replace operators
+  document.getElementById('error-p').value = formatNumber(exact);
+  document.getElementById('error-pstar').value = formatNumber(approx);
+  switchModule('error');
+  document.querySelectorAll('.tab')[1].classList.add('active');
+  document.querySelectorAll('.tab')[0].classList.remove('active');
+}
+
+// Tokenizer for expression parsing
+function tokenize(expr) {
+  const tokens = [];
+  let i = 0;
+  
+  while (i < expr.length) {
+    const char = expr[i];
+    
+    // Skip whitespace
+    if (/\s/.test(char)) {
+      i++;
+      continue;
+    }
+    
+    // Numbers
+    if (/\d/.test(char) || (char === '.' && i + 1 < expr.length && /\d/.test(expr[i + 1]))) {
+      let num = '';
+      while (i < expr.length && (/\d/.test(expr[i]) || expr[i] === '.')) {
+        num += expr[i++];
+      }
+      tokens.push({ type: 'NUMBER', value: parseFloat(num) });
+      continue;
+    }
+    
+    // Operators and parentheses
+    if ('+-*/^()'.includes(char)) {
+      tokens.push({ type: 'OPERATOR', value: char });
+      i++;
+      continue;
+    }
+    
+    // Constants
+    if (char === 'π' || (expr.substr(i, 2) === 'pi')) {
+      tokens.push({ type: 'NUMBER', value: Math.PI });
+      i += char === 'π' ? 1 : 2;
+      continue;
+    }
+    if (char === 'e' && (i === 0 || !/[a-z]/i.test(expr[i - 1])) && (i === expr.length - 1 || !/[a-z]/i.test(expr[i + 1]))) {
+      tokens.push({ type: 'NUMBER', value: Math.E });
+      i++;
+      continue;
+    }
+    
+    throw new Error(`Unexpected character: ${char}`);
+  }
+  
+  return tokens;
+}
+
+// Evaluate with precision after each operation
+function evaluateWithPrecision(tokens, k, applyPrecision, steps) {
+  let pos = 0;
+  let stepCount = 0;
+  
+  function parseExpression() {
+    let left = parseTerm();
+    
+    while (pos < tokens.length && (tokens[pos].value === '+' || tokens[pos].value === '-')) {
+      const op = tokens[pos++].value;
+      const right = parseTerm();
+      
+      const exact = op === '+' ? left + right : left - right;
+      const oldLeft = left;
+      left = applyPrecision(exact, k);
+      stepCount++;
+      steps.push(`Step ${stepCount}: ${formatNumber(oldLeft)} ${op} ${formatNumber(right)} = ${formatNumber(exact)} → ${formatNumber(left)} (after k-precision)`);
+    }
+    
+    return left;
+  }
+  
+  function parseTerm() {
+    let left = parseFactor();
+    
+    while (pos < tokens.length && (tokens[pos].value === '*' || tokens[pos].value === '/')) {
+      const op = tokens[pos++].value;
+      const right = parseFactor();
+      
+      const exact = op === '*' ? left * right : left / right;
+      const oldLeft = left;
+      left = applyPrecision(exact, k);
+      stepCount++;
+      steps.push(`Step ${stepCount}: ${formatNumber(oldLeft)} ${op} ${formatNumber(right)} = ${formatNumber(exact)} → ${formatNumber(left)} (after k-precision)`);
+    }
+    
+    return left;
+  }
+  
+  function parseFactor() {
+    let base = parsePrimary();
+    
+    while (pos < tokens.length && tokens[pos].value === '^') {
+      pos++;
+      const exponent = parsePrimary();
+      
+      const exact = Math.pow(base, exponent);
+      const oldBase = base;
+      base = applyPrecision(exact, k);
+      stepCount++;
+      steps.push(`Step ${stepCount}: ${formatNumber(oldBase)} ^ ${formatNumber(exponent)} = ${formatNumber(exact)} → ${formatNumber(base)} (after k-precision)`);
+    }
+    
+    return base;
+  }
+  
+  function parsePrimary() {
+    if (pos >= tokens.length) throw new Error('Unexpected end of expression');
+    
+    const token = tokens[pos];
+    
+    if (token.type === 'NUMBER') {
+      pos++;
+      const result = applyPrecision(token.value, k);
+      if (Math.abs(token.value - result) > 1e-15) {
+        stepCount++;
+        steps.push(`Step ${stepCount}: ${formatNumber(token.value)} → ${formatNumber(result)} (input with k-precision)`);
+      }
+      return result;
+    }
+    
+    if (token.value === '(') {
+      pos++;
+      const result = parseExpression();
+      if (pos >= tokens.length || tokens[pos].value !== ')') {
+        throw new Error('Missing closing parenthesis');
+      }
+      pos++;
+      return result;
+    }
+    
+    if (token.value === '-' || token.value === '+') {
+      const op = token.value;
+      pos++;
+      const value = parsePrimary();
+      return op === '-' ? -value : value;
+    }
+    
+    throw new Error(`Unexpected token: ${token.value}`);
+  }
+  
+  return parseExpression();
+}
+
+// Expression evaluator with PEMDAS and step-by-step precision
+function evaluateExpr(expr, k, applyPrecision) {
+  // Replace alternate operators
   expr = expr.replace(/×/g, '*').replace(/÷/g, '/');
   
   let steps = [];
+  steps.push(`Expression: ${expr}`);
+  steps.push(`Evaluating with k=${k} digit precision after each operation`);
   
-  if (precisionMode === 'final') {
-    // Evaluate exactly then apply precision
-    try {
-      const exact = Function('"use strict"; return (' + expr + ')')();
-      steps.push(`Expression: ${expr}`);
-      steps.push(`Exact result: ${formatNumber(exact)}`);
-      
-      const result = applyPrecision(exact, k);
-      steps.push(`Apply ${k}-digit precision: ${formatNumber(result)}`);
-      
-      return { result, exact, steps };
-    } catch (e) {
-      throw new Error('Invalid expression');
-    }
-  } else {
-    // Apply precision after each operation
-    steps.push(`Expression: ${expr}`);
-    steps.push(`Mode: Apply ${k}-digit precision after each operation`);
+  try {
+    // Get exact result for comparison
+    const exactExpr = expr.replace(/π|pi/gi, Math.PI.toString()).replace(/\be\b/gi, Math.E.toString());
+    const exact = Function('"use strict"; return (' + exactExpr + ')')();
     
-    // This is simplified - full implementation would parse and evaluate step by step
-    try {
-      const exact = Function('"use strict"; return (' + expr + ')')();
-      const result = applyPrecision(exact, k);
-      steps.push(`Final result with precision at each step: ${formatNumber(result)}`);
-      return { result, exact, steps };
-    } catch (e) {
-      throw new Error('Invalid expression');
-    }
+    // Tokenize and evaluate with precision
+    const tokens = tokenize(expr);
+    const result = evaluateWithPrecision(tokens, k, applyPrecision, steps);
+    
+    steps.push(`Final result: ${formatNumber(result)}`);
+    steps.push(`Exact (no k-precision): ${formatNumber(exact)}`);
+    
+    return { result, exact, steps };
+  } catch (e) {
+    throw new Error('Invalid expression: ' + e.message);
   }
 }
 
@@ -909,7 +1073,7 @@ function sendToError(which) {
   document.querySelectorAll('.tab')[0].classList.remove('active');
 }
 
-// Module 2: Error Analysis (unchanged from previous version)
+// Module 2: Error Analysis
 function computeError() {
   const p = parseFloat(document.getElementById('error-p').value);
   const pstar = parseFloat(document.getElementById('error-pstar').value);
@@ -945,18 +1109,18 @@ function computeError() {
   let metricsHTML = `
     <div class="metric">
       <div class="metric-label">Absolute Error</div>
-      <div class="metric-value">${formatScientific(absoluteError)}</div>
+      <div class="metric-value">${smartFormat(absoluteError)}</div>
       <div class="metric-formula">|p - p*|</div>
     </div>
     <div class="metric">
       <div class="metric-label">Relative Error</div>
-      <div class="metric-value">${formatScientific(relativeError)}</div>
-      <div class="metric-formula">${(relativeError * 100).toFixed(6)}%</div>
+      <div class="metric-value">${smartFormat(relativeError)}</div>
+      <div class="metric-formula">${smartFormat(relativeError * 100)}%</div>
     </div>
     <div class="metric">
       <div class="metric-label">Max Error (t=${t})</div>
-      <div class="metric-value ${withinBounds ? 'success' : 'warning'}">${formatScientific(maxError)}</div>
-      <div class="metric-formula">${withinBounds ? 'Within bounds' : 'Exceeds bounds'}</div>
+      <div class="metric-value ${withinBounds ? 'success' : 'warning'}">${smartFormat(maxError)}</div>
+      <div class="metric-formula">${formatThreshold(t)} × |p| ${withinBounds ? '✓' : '✗'}</div>
     </div>`;
 
   document.getElementById('error-metrics').innerHTML = metricsHTML;
@@ -973,7 +1137,7 @@ function computeError() {
     const threshold = 5 * Math.pow(10, -testT);
     const passes = relativeError <= threshold;
     const badge = passes ? '<span class="badge badge-pass">Pass</span>' : '<span class="badge badge-fail">Fail</span>';
-    stepsHTML += `<div class="step"><div class="step-num">t=${testT}</div><div class="step-text">${formatScientific(relativeError)} ≤ ${formatScientific(threshold)} ${badge}</div></div>`;
+    stepsHTML += `<div class="step"><div class="step-num">t=${testT}</div><div class="step-text">${smartFormat(relativeError)} ≤ ${formatThreshold(testT)} = ${smartFormat(threshold)} ${badge}</div></div>`;
     if (!passes && testT > sigDigits) break;
   }
 
@@ -1067,11 +1231,12 @@ function insertConstant(c) {
 }
 
 function evaluateFunction() {
-  const x = parseFloat(document.getElementById('func-x').value);
+  const xInput = document.getElementById('func-x').value.trim();
+  const x = xInput ? parseFloat(xInput) : null;
   const k = Math.min(parseInt(document.getElementById('func-k').value), 8);
 
-  if (isNaN(x)) {
-    alert('Please enter a valid x value.');
+  if (xInput && isNaN(x)) {
+    alert('Please enter a valid x value or leave empty.');
     return;
   }
 
@@ -1089,10 +1254,23 @@ function evaluateFunction() {
   try {
     // Build full expression
     let fullExpr = validTerms.map((t, i) => {
-      let expr = t.expr.replace(/x/g, `(${x})`);
+      let expr = t.expr;
+      
+      // Replace x only if x value is provided
+      if (x !== null) {
+        expr = expr.replace(/x/g, `(${x})`);
+      } else if (/x/i.test(expr)) {
+        throw new Error('Expression contains variable x but no x value provided');
+      }
+      
       expr = expr.replace(/π|pi/gi, Math.PI.toString());
       expr = expr.replace(/\be\b/gi, Math.E.toString());
-      expr = expr.replace(/√/g, 'Math.sqrt');
+      
+      // Handle √ followed by number or expression in parentheses
+      expr = expr.replace(/√\(([^)]+)\)/g, 'Math.sqrt($1)'); // √(expression)
+      expr = expr.replace(/√(\d+\.?\d*)/g, 'Math.sqrt($1)');  // √number
+      expr = expr.replace(/√([a-zA-Z]+)/g, 'Math.sqrt($1)');  // √variable
+      
       expr = expr.replace(/sin/g, 'Math.sin');
       expr = expr.replace(/cos/g, 'Math.cos');
       expr = expr.replace(/tan/g, 'Math.tan');
@@ -1225,22 +1403,37 @@ function ieeeToDecimal() {
   }
 
   const signValue = sign === '1' ? -1 : 1;
-  const expValue = parseInt(exp, 2) - 1023;
+  const exponent = parseInt(exp, 2) - 1023;
   const mantValue = 1 + Array.from(mant).reduce((sum, bit, i) => 
     sum + parseInt(bit) * Math.pow(2, -(i + 1)), 0);
 
-  const result = signValue * Math.pow(2, expValue) * mantValue;
+  const result = signValue * Math.pow(2, exponent) * mantValue;
+  
+  const precision = 53;
+  const halfUlp = Math.pow(2, exponent - precision);
+  const lowerBound = result - halfUlp;
+  const upperBound = result + halfUlp;
 
   let html = `
     <div class="result-label">Decimal Result</div>
     <div class="result-main">${formatNumber(result)}</div>
+    
     <div class="binary-section">
       <div class="binary-label">Calculation:</div>
       <div class="binary-display">
-        Sign: ${sign} → ${signValue > 0 ? 'Positive' : 'Negative'}<br>
-        Exponent: ${exp} → ${parseInt(exp, 2)} - 1023 = ${expValue}<br>
-        Mantissa: 1.${mant} → ${mantValue.toFixed(17)}<br>
-        Result: ${signValue} × 2^${expValue} × ${mantValue.toFixed(10)} = ${result}
+        <strong>Sign:</strong> ${sign} → ${signValue > 0 ? 'Positive (+1)' : 'Negative (-1)'}<br>
+        <strong>Exponent:</strong> ${exp} → ${parseInt(exp, 2)} - 1023 = ${exponent}<br>
+        <strong>Mantissa:</strong> 1.${mant} → ${mantValue.toFixed(17)}<br>
+        <strong>Result:</strong> ${signValue} × 2<sup>${exponent}</sup> × ${mantValue.toFixed(10)} = ${result}
+      </div>
+    </div>
+    
+    <div class="binary-section">
+      <div class="binary-label">Representable Interval:</div>
+      <div class="binary-display">
+        [x − 2<sup>${exponent - precision}</sup>, x + 2<sup>${exponent - precision}</sup>)<br>
+        = [${formatNumber(result)} − 2<sup>${exponent - precision}</sup>, ${formatNumber(result)} + 2<sup>${exponent - precision}</sup>)<br>
+        ≈ [${smartFormat(lowerBound)}, ${smartFormat(upperBound)})
       </div>
     </div>
   `;
@@ -1251,6 +1444,13 @@ function ieeeToDecimal() {
 
 function displayIEEE(sign, exp, mant, original) {
   const full = sign + exp + mant;
+  const exponent = parseInt(exp, 2) - 1023;
+  const precision = 53; // Double precision (52 bits + 1 implicit)
+  
+  // Calculate interval bounds
+  const halfUlp = Math.pow(2, exponent - precision);
+  const lowerBound = original - halfUlp;
+  const upperBound = original + halfUlp;
   
   let html = `
     <div class="result-label">Original Decimal</div>
@@ -1272,15 +1472,31 @@ function displayIEEE(sign, exp, mant, original) {
       <div class="binary-label">Breakdown:</div>
       <div class="binary-display">
         <strong style="color:#e74c3c;">Sign (1 bit):</strong> ${sign} → ${sign === '0' ? 'Positive' : 'Negative'}<br>
-        <strong style="color:#3498db;">Exponent (11 bits):</strong> ${exp} → ${parseInt(exp, 2)} (biased) → ${parseInt(exp, 2) - 1023} (actual)<br>
+        <strong style="color:#3498db;">Exponent (11 bits):</strong> ${exp} → ${parseInt(exp, 2)} (biased) → ${exponent} (actual)<br>
         <strong style="color:#27ae60;">Mantissa (52 bits):</strong> ${mant}
+      </div>
+    </div>
+
+    <div class="binary-section">
+      <div class="binary-label">Normalized Form:</div>
+      <div class="binary-display">
+        (−1)<sup>${sign}</sup> × 2<sup>${exponent}</sup> × (1.${mant.substring(0, 20)}...)
+      </div>
+    </div>
+
+    <div class="binary-section">
+      <div class="binary-label">Representable Interval:</div>
+      <div class="binary-display">
+        [x − 2<sup>${exponent - precision}</sup>, x + 2<sup>${exponent - precision}</sup>)<br>
+        = [${formatNumber(original)} − 2<sup>${exponent - precision}</sup>, ${formatNumber(original)} + 2<sup>${exponent - precision}</sup>)<br>
+        ≈ [${smartFormat(lowerBound)}, ${smartFormat(upperBound)})
       </div>
     </div>
 
     <div class="binary-section">
       <div class="binary-label">Formula:</div>
       <div class="binary-display">
-        (-1)^${sign} × 2^(${parseInt(exp, 2) - 1023}) × 1.${mant.substring(0, 20)}...<br>
+        (-1)^${sign} × 2^(${exponent}) × 1.${mant.substring(0, 20)}...<br>
         = ${formatNumber(original)}
       </div>
     </div>
